@@ -52,3 +52,5 @@ coverage.xml
 # Sphinx documentation
 docs/_build/
 
+# docke related mysql
+docker/volumes/varlibmysql

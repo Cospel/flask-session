@@ -112,7 +112,7 @@ class RedisSessionInterface(SessionInterface):
         self.permanent = permanent
 
     def open_session(self, app, request):
-        sid = request.cookies.get(app.session_cookie_name)
+        sid = request.headers.get(app.config.get('SESSION_HEADER_NAME', 'X-Header-Session'), '')
         if not sid:
             sid = self._generate_sid()
             return self.session_class(sid=sid, permanent=self.permanent)
@@ -139,13 +139,9 @@ class RedisSessionInterface(SessionInterface):
         return self.session_class(sid=sid, permanent=self.permanent)
 
     def save_session(self, app, session, response):
-        domain = self.get_cookie_domain(app)
-        path = self.get_cookie_path(app)
         if not session:
             if session.modified:
                 self.redis.delete(self.key_prefix + session.sid)
-                response.delete_cookie(app.session_cookie_name,
-                                       domain=domain, path=path)
             return
 
         # Modification case.  There are upsides and downsides to
@@ -158,8 +154,6 @@ class RedisSessionInterface(SessionInterface):
         # if not self.should_set_cookie(app, session):
         #    return
 
-        httponly = self.get_cookie_httponly(app)
-        secure = self.get_cookie_secure(app)
         expires = self.get_expiration_time(app, session)
         val = self.serializer.dumps(dict(session))
         self.redis.setex(name=self.key_prefix + session.sid, value=val,
@@ -168,9 +162,7 @@ class RedisSessionInterface(SessionInterface):
             session_id = self._get_signer(app).sign(want_bytes(session.sid))
         else:
             session_id = session.sid
-        response.set_cookie(app.session_cookie_name, session_id,
-                            expires=expires, httponly=httponly,
-                            domain=domain, path=path, secure=secure)
+        response.headers[app.config.get('SESSION_HEADER_NAME', 'X-Header-Session')] = session_id
 
 
 class MemcachedSessionInterface(SessionInterface):
@@ -230,7 +222,7 @@ class MemcachedSessionInterface(SessionInterface):
         return timeout
 
     def open_session(self, app, request):
-        sid = request.cookies.get(app.session_cookie_name)
+        sid = request.headers.get(app.config.get('SESSION_HEADER_NAME', 'X-Header-Session'), '')
         if not sid:
             sid = self._generate_sid()
             return self.session_class(sid=sid, permanent=self.permanent)
@@ -260,16 +252,12 @@ class MemcachedSessionInterface(SessionInterface):
         return self.session_class(sid=sid, permanent=self.permanent)
 
     def save_session(self, app, session, response):
-        domain = self.get_cookie_domain(app)
-        path = self.get_cookie_path(app)
         full_session_key = self.key_prefix + session.sid
         if PY2 and isinstance(full_session_key, unicode):
             full_session_key = full_session_key.encode('utf-8')
         if not session:
             if session.modified:
                 self.client.delete(full_session_key)
-                response.delete_cookie(app.session_cookie_name,
-                                       domain=domain, path=path)
             return
 
         httponly = self.get_cookie_httponly(app)
@@ -285,9 +273,7 @@ class MemcachedSessionInterface(SessionInterface):
             session_id = self._get_signer(app).sign(want_bytes(session.sid))
         else:
             session_id = session.sid
-        response.set_cookie(app.session_cookie_name, session_id,
-                            expires=expires, httponly=httponly,
-                            domain=domain, path=path, secure=secure)
+        response.headers[app.config.get('SESSION_HEADER_NAME', 'X-Header-Session')] = session_id
 
 
 class FileSystemSessionInterface(SessionInterface):
@@ -317,7 +303,7 @@ class FileSystemSessionInterface(SessionInterface):
         self.permanent = permanent
 
     def open_session(self, app, request):
-        sid = request.cookies.get(app.session_cookie_name)
+        sid = request.headers.get(app.config.get('SESSION_HEADER_NAME', 'X-Header-Session'), '')
         if not sid:
             sid = self._generate_sid()
             return self.session_class(sid=sid, permanent=self.permanent)
@@ -338,17 +324,11 @@ class FileSystemSessionInterface(SessionInterface):
         return self.session_class(sid=sid, permanent=self.permanent)
 
     def save_session(self, app, session, response):
-        domain = self.get_cookie_domain(app)
-        path = self.get_cookie_path(app)
         if not session:
             if session.modified:
                 self.cache.delete(self.key_prefix + session.sid)
-                response.delete_cookie(app.session_cookie_name,
-                                       domain=domain, path=path)
             return
 
-        httponly = self.get_cookie_httponly(app)
-        secure = self.get_cookie_secure(app)
         expires = self.get_expiration_time(app, session)
         data = dict(session)
         self.cache.set(self.key_prefix + session.sid, data,
@@ -357,9 +337,7 @@ class FileSystemSessionInterface(SessionInterface):
             session_id = self._get_signer(app).sign(want_bytes(session.sid))
         else:
             session_id = session.sid
-        response.set_cookie(app.session_cookie_name, session_id,
-                            expires=expires, httponly=httponly,
-                            domain=domain, path=path, secure=secure)
+        response.headers[app.config.get('SESSION_HEADER_NAME', 'X-Header-Session')] = session_id
 
 
 class MongoDBSessionInterface(SessionInterface):
@@ -391,7 +369,7 @@ class MongoDBSessionInterface(SessionInterface):
         self.permanent = permanent
 
     def open_session(self, app, request):
-        sid = request.cookies.get(app.session_cookie_name)
+        sid = request.headers.get(app.config.get('SESSION_HEADER_NAME', 'X-Header-Session'), '')
         if not sid:
             sid = self._generate_sid()
             return self.session_class(sid=sid, permanent=self.permanent)
@@ -422,18 +400,12 @@ class MongoDBSessionInterface(SessionInterface):
         return self.session_class(sid=sid, permanent=self.permanent)
 
     def save_session(self, app, session, response):
-        domain = self.get_cookie_domain(app)
-        path = self.get_cookie_path(app)
         store_id = self.key_prefix + session.sid
         if not session:
             if session.modified:
                 self.store.remove({'id': store_id})
-                response.delete_cookie(app.session_cookie_name,
-                                       domain=domain, path=path)
             return
 
-        httponly = self.get_cookie_httponly(app)
-        secure = self.get_cookie_secure(app)
         expires = self.get_expiration_time(app, session)
         val = self.serializer.dumps(dict(session))
         self.store.update({'id': store_id},
@@ -444,9 +416,7 @@ class MongoDBSessionInterface(SessionInterface):
             session_id = self._get_signer(app).sign(want_bytes(session.sid))
         else:
             session_id = session.sid
-        response.set_cookie(app.session_cookie_name, session_id,
-                            expires=expires, httponly=httponly,
-                            domain=domain, path=path, secure=secure)
+        response.headers[app.config.get('SESSION_HEADER_NAME', 'X-Header-Session')] = session_id
 
 
 class SqlAlchemySessionInterface(SessionInterface):
@@ -495,7 +465,8 @@ class SqlAlchemySessionInterface(SessionInterface):
         self.sql_session_model = Session
 
     def open_session(self, app, request):
-        sid = request.cookies.get(app.session_cookie_name)
+        sid = request.headers.get(app.config.get('SESSION_HEADER_NAME', 'X-Header-Session'), '')
+
         if not sid:
             sid = self._generate_sid()
             return self.session_class(sid=sid, permanent=self.permanent)
@@ -528,8 +499,6 @@ class SqlAlchemySessionInterface(SessionInterface):
         return self.session_class(sid=sid, permanent=self.permanent)
 
     def save_session(self, app, session, response):
-        domain = self.get_cookie_domain(app)
-        path = self.get_cookie_path(app)
         store_id = self.key_prefix + session.sid
         saved_session = self.sql_session_model.query.filter_by(
             session_id=store_id).first()
@@ -538,12 +507,8 @@ class SqlAlchemySessionInterface(SessionInterface):
                 if saved_session:
                     self.db.session.delete(saved_session)
                     self.db.session.commit()
-                response.delete_cookie(app.session_cookie_name,
-                                       domain=domain, path=path)
             return
 
-        httponly = self.get_cookie_httponly(app)
-        secure = self.get_cookie_secure(app)
         expires = self.get_expiration_time(app, session)
         val = self.serializer.dumps(dict(session))
         if saved_session:
@@ -558,6 +523,5 @@ class SqlAlchemySessionInterface(SessionInterface):
             session_id = self._get_signer(app).sign(want_bytes(session.sid))
         else:
             session_id = session.sid
-        response.set_cookie(app.session_cookie_name, session_id,
-                            expires=expires, httponly=httponly,
-                            domain=domain, path=path, secure=secure)
+
+        response.headers[app.config.get('SESSION_HEADER_NAME', 'X-Header-Session')] = session_id
