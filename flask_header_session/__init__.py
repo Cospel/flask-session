@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
 """
-    flask_session
+    flask_header_session
     ~~~~~~~~~~~~~
 
     Adds server session support to your application.
+    Use HTTP Header as the default vessel for your session.
 
-    :copyright: (c) 2014 by Shipeng Feng.
+    :copyright: (c) 2018 by Xiqing Chu.
     :license: BSD, see LICENSE for more details.
 """
 
-__version__ = '0.3.1'
+__version__ = '0.0.7'
 
 import os
 

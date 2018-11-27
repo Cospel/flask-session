@@ -14,6 +14,11 @@ services:
     ports:
       - "3306:3306"
 
+  r:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+
   front:
     image: laalaguer/flask-dev
     depends_on:
@@ -30,3 +35,5 @@ services:
       MYSQL_DB: businesscard
       MYSQL_DB_USER: businesscarduser
       MYSQL_DB_PASSWORD: changemeifyoucan
+      REDIS_HOST: r
+      REDIS_PORT: 6379

@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 """
-    Hello
+    Example Session with redis, you can also use with other backends.
     ~~~~~
 
-    Flask-Session demo.
+    Flask-Header-Session demo.
 
-    :copyright: (c) 2014 by Shipeng Feng.
+    :copyright: (c) 2018 by Xiqing Chu.
     :license: BSD, see LICENSE for more details.
 """
 from flask import Flask, session
-from flask_session import Session
+from flask_header_session import Session
 
 
 SESSION_TYPE = 'redis'

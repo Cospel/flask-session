@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-    flask_session.sessions
+    flask_header_session.sessions
     ~~~~~~~~~~~~~~~~~~~~~~
 
     Server-side Sessions and SessionInterfaces.
 
-    :copyright: (c) 2014 by Shipeng Feng.
+    :copyright: (c) 2018 by Xiqing Chu
     :license: BSD, see LICENSE for more details.
 """
 import sys
@@ -116,6 +116,7 @@ class RedisSessionInterface(SessionInterface):
         if not sid:
             sid = self._generate_sid()
             return self.session_class(sid=sid, permanent=self.permanent)
+
         if self.use_signer:
             signer = self._get_signer(app)
             if signer is None:
@@ -142,6 +143,7 @@ class RedisSessionInterface(SessionInterface):
         if not session:
             if session.modified:
                 self.redis.delete(self.key_prefix + session.sid)
+                response.headers.pop(app.config.get('SESSION_HEADER_NAME', 'X-Header-Session'), None)
             return
 
         # Modification case.  There are upsides and downsides to
@@ -226,6 +228,7 @@ class MemcachedSessionInterface(SessionInterface):
         if not sid:
             sid = self._generate_sid()
             return self.session_class(sid=sid, permanent=self.permanent)
+
         if self.use_signer:
             signer = self._get_signer(app)
             if signer is None:
@@ -258,6 +261,7 @@ class MemcachedSessionInterface(SessionInterface):
         if not session:
             if session.modified:
                 self.client.delete(full_session_key)
+                response.headers.pop(app.config.get('SESSION_HEADER_NAME', 'X-Header-Session'), None)
             return
 
         httponly = self.get_cookie_httponly(app)
@@ -307,6 +311,7 @@ class FileSystemSessionInterface(SessionInterface):
         if not sid:
             sid = self._generate_sid()
             return self.session_class(sid=sid, permanent=self.permanent)
+
         if self.use_signer:
             signer = self._get_signer(app)
             if signer is None:
@@ -327,6 +332,7 @@ class FileSystemSessionInterface(SessionInterface):
         if not session:
             if session.modified:
                 self.cache.delete(self.key_prefix + session.sid)
+                response.headers.pop(app.config.get('SESSION_HEADER_NAME', 'X-Header-Session'), None)
             return
 
         expires = self.get_expiration_time(app, session)
@@ -373,6 +379,7 @@ class MongoDBSessionInterface(SessionInterface):
         if not sid:
             sid = self._generate_sid()
             return self.session_class(sid=sid, permanent=self.permanent)
+
         if self.use_signer:
             signer = self._get_signer(app)
             if signer is None:
@@ -404,6 +411,7 @@ class MongoDBSessionInterface(SessionInterface):
         if not session:
             if session.modified:
                 self.store.remove({'id': store_id})
+                response.headers.pop(app.config.get('SESSION_HEADER_NAME', 'X-Header-Session'), None)
             return
 
         expires = self.get_expiration_time(app, session)
@@ -470,6 +478,7 @@ class SqlAlchemySessionInterface(SessionInterface):
         if not sid:
             sid = self._generate_sid()
             return self.session_class(sid=sid, permanent=self.permanent)
+
         if self.use_signer:
             signer = self._get_signer(app)
             if signer is None:
@@ -507,6 +516,7 @@ class SqlAlchemySessionInterface(SessionInterface):
                 if saved_session:
                     self.db.session.delete(saved_session)
                     self.db.session.commit()
+                    response.headers.pop(app.config.get('SESSION_HEADER_NAME', 'X-Header-Session'), None)
             return
 
         expires = self.get_expiration_time(app, session)

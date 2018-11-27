@@ -5,26 +5,25 @@ Flask-Session
 Flask-Session is an extension for Flask that adds support for 
 Server-side Session to your application.
 
-Links
-`````
+This variation uses a header instead of cookie as message vehicle.
 
-* `development version
-  <https://github.com/fengsp/flask-session/zipball/master#egg=Flask-dev>`_
+So that you can tell the client to set session on headers, and later 
+verify the header value to identify different users.
 
 """
 from setuptools import setup
 
 
 setup(
-    name='Flask-Session',
-    version='0.3.1',
-    url='https://github.com/fengsp/flask-session',
+    name='Flask-Header-Session',
+    version='0.0.7',
+    url='https://github.com/laalaguer/flask-session',
     license='BSD',
-    author='Shipeng Feng',
-    author_email='fsp261@gmail.com',
-    description='Adds server-side session support to your Flask application',
+    author='Xiqing Chu',
+    author_email='laalaguer@gmail.com',
+    description='Flask server side session via HTTP header',
     long_description=__doc__,
-    packages=['flask_session'],
+    packages=['flask_header_session'],
     zip_safe=False,
     include_package_data=True,
     platforms='any',
@@ -38,6 +37,7 @@ setup(
         'License :: OSI Approved :: BSD License',
         'Operating System :: OS Independent',
         'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 3',
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
         'Topic :: Software Development :: Libraries :: Python Modules'
     ]
